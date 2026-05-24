@@ -1,6 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
+export interface ChatMessage {
+  id: string
+  from: 'me' | 'peer'
+  text: string
+  timestamp: number
+}
+
 const api = {
   // Auth
   auth: {
@@ -34,6 +41,13 @@ const api = {
   onPeerStatus: (cb: (online: boolean, peerName: string) => void): void => {
     ipcRenderer.on('peer_status', (_, online, name) => cb(online as boolean, name as string))
   },
+
+  // Chat
+  sendMessage: (text: string): void => ipcRenderer.send('send-message', text),
+  onMessage: (cb: (msg: ChatMessage) => void): void => {
+    ipcRenderer.on('new-message', (_, msg) => cb(msg as ChatMessage))
+  },
+  getMessages: (): Promise<ChatMessage[]> => ipcRenderer.invoke('get-messages'),
 }
 
 if (process.contextIsolated) {

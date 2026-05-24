@@ -5,6 +5,7 @@ export type ClientMessage =
   | { type: 'accept'; roomId: string }
   | { type: 'reject' }
   | { type: 'hangup' }
+  | { type: 'message'; text: string; timestamp: number }
 
 // Server → Client
 export type ServerMessage =
@@ -15,4 +16,5 @@ export type ServerMessage =
   | { type: 'call_accepted'; roomId: string }
   | { type: 'call_rejected' }
   | { type: 'call_hangup' }
+  | { type: 'message_received'; text: string; fromName: string; timestamp: number }
   | { type: 'error'; message: string }

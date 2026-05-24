@@ -1,8 +1,8 @@
-import { app, BrowserWindow, WebContentsView, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join, resolve } from 'path'
 import { is } from '@electron-toolkit/utils'
 import { createSignalingClient } from './signaling'
-import { createJitsiView, destroyJitsiView } from './jitsi'
+import { createJitsiWindow, destroyJitsiWindow } from './jitsi'
 import {
   generateCodeVerifier,
   generateCodeChallenge,
@@ -34,7 +34,7 @@ let mainWindow: BrowserWindow | null = null
 let pendingVerifier: string | null = null
 let pendingState: string | null = null
 let signalingDestroy: (() => void) | null = null
-let currentJitsiView: WebContentsView | null = null
+let currentJitsiWindow: BrowserWindow | null = null
 
 // ─── Deep link handler ────────────────────────────────────────────────────────
 
@@ -121,20 +121,21 @@ function initSignaling(): void {
     {
       onCallReady: (roomId) => {
         const auth = getAuth()
-        currentJitsiView = createJitsiView(win, roomId, auth?.displayName ?? '')
+        currentJitsiWindow = createJitsiWindow(roomId, auth?.displayName ?? '')
+        currentJitsiWindow.on('closed', () => {
+          currentJitsiWindow = null
+          win.webContents.send('call_hangup')
+          win.webContents.send('jitsi_closed')
+        })
       },
       onCallEnded: () => {
-        if (currentJitsiView) {
-          destroyJitsiView(win, currentJitsiView)
-          currentJitsiView = null
+        if (currentJitsiWindow && !currentJitsiWindow.isDestroyed()) {
+          destroyJitsiWindow(currentJitsiWindow)
+          currentJitsiWindow = null
         }
       },
     }
   )
-
-  win.on('close', () => {
-    if (currentJitsiView) destroyJitsiView(win, currentJitsiView)
-  })
 
   signalingDestroy = () => signaling.destroy()
 }
@@ -163,6 +164,10 @@ ipcMain.on('auth:logout', () => {
   clearAuth()
   signalingDestroy?.()
   signalingDestroy = null
+  if (currentJitsiWindow && !currentJitsiWindow.isDestroyed()) {
+    currentJitsiWindow.close()
+    currentJitsiWindow = null
+  }
   mainWindow?.webContents.send('auth:updated', { isAuthenticated: false })
 })
 
@@ -170,15 +175,16 @@ ipcMain.on('auth:logout', () => {
 
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
-    width: 380,
-    height: 560,
-    resizable: false,
+    width: 420,
+    height: 700,
+    minWidth: 380,
+    minHeight: 560,
+    resizable: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
     },
     title: 'VideoCall',
-    icon: join(__dirname, '../../icon.png'),
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -194,10 +200,8 @@ function createWindow(): BrowserWindow {
 app.whenReady().then(() => {
   mainWindow = createWindow()
 
-  // Si déjà authentifié, connecte le signaling
   if (getAuth()) initSignaling()
 
-  // Windows : deep link au démarrage via argv
   const startUrl = process.argv.find((arg) => arg.startsWith('videocall://'))
   if (startUrl) handleDeepLink(startUrl)
 

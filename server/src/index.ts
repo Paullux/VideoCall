@@ -126,6 +126,14 @@ wss.on('connection', (ws) => {
       case 'hangup':
         if (peer) send(peer[1].ws, { type: 'call_hangup' })
         break
+      case 'message':
+        if (peer) send(peer[1].ws, {
+          type: 'message_received',
+          text: msg.text,
+          fromName: clients.get(userId)!.name,
+          timestamp: msg.timestamp,
+        })
+        break
     }
   })
 

@@ -1,5 +1,12 @@
 /// <reference types="vite/client" />
 
+interface ChatMessage {
+  id: string
+  from: 'me' | 'peer'
+  text: string
+  timestamp: number
+}
+
 declare global {
   interface Window {
     api: {
@@ -18,6 +25,9 @@ declare global {
       onCallRejected: (cb: () => void) => void
       onCallHangup: (cb: () => void) => void
       onPeerStatus: (cb: (online: boolean, peerName: string) => void) => void
+      sendMessage: (text: string) => void
+      onMessage: (cb: (msg: ChatMessage) => void) => void
+      getMessages: () => Promise<ChatMessage[]>
     }
   }
 }

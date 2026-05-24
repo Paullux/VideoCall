@@ -1,6 +1,7 @@
 :root {
   --bg-main: #0F0A1F;
   --bg-card: #1A1233;
+  --bg-bubble-peer: #1E1538;
 
   --primary: #7C3AED;
   --primary-light: #A78BFA;
@@ -8,9 +9,9 @@
   --accent-cyan: #22D3EE;
 
   --text-main: #F8FAFC;
-  --text-muted: #CBD5E1;
+  --text-muted: #94A3B8;
 
-  --border: #312E81;
+  --border: #2D2450;
   --success: #34D399;
 }
 
@@ -35,7 +36,6 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 24px;
 }
 
 /* ─── Header ─────────────────────────────────────────────────────────────── */
@@ -44,7 +44,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
+  padding: 14px 18px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-card) 60%, var(--bg-main));
 }
 
 .app-header-brand {
@@ -53,26 +56,12 @@ body {
   gap: 10px;
 }
 
-.app-logo {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-}
-
 .app-header h1 {
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--primary-light);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-/* ─── Contenu principal ──────────────────────────────────────────────────── */
-
-.app-main {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
 }
 
 /* ─── Contact card ───────────────────────────────────────────────────────── */
@@ -80,45 +69,50 @@ body {
 .contact-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
   background: var(--bg-card);
-  border-radius: 12px;
-  border: 1px solid var(--border);
 }
 
 .avatar {
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-main);
   flex-shrink: 0;
-  box-shadow: 0 0 16px color-mix(in srgb, var(--primary) 40%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
 .contact-info {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .contact-name {
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   font-weight: 600;
   color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .status {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
 }
 
 .status-dot {
@@ -129,91 +123,288 @@ body {
 }
 
 .status.online  { color: var(--success); }
-.status.online .status-dot  { background: var(--success); }
-.status.offline { color: var(--text-muted); opacity: 0.5; }
+.status.online .status-dot  { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.status.offline { color: var(--text-muted); opacity: 0.55; }
 .status.offline .status-dot { background: var(--text-muted); }
 
-/* ─── Boutons ────────────────────────────────────────────────────────────── */
+/* ─── Bouton appel (contact card) ────────────────────────────────────────── */
 
-button {
+.btn-call-icon {
+  flex-shrink: 0;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--primary) 50%, transparent);
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-call-icon:hover:not(:disabled) { opacity: 0.85; transform: scale(1.06); }
+.btn-call-icon:active:not(:disabled) { transform: scale(0.97); }
+.btn-call-icon:disabled { opacity: 0.25; cursor: not-allowed; }
+
+/* ─── Bandeau d'appel ────────────────────────────────────────────────────── */
+
+.call-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  gap: 12px;
+}
+
+.call-banner.calling  { background: color-mix(in srgb, var(--primary) 18%, var(--bg-main)); }
+.call-banner.incoming { background: color-mix(in srgb, var(--success) 18%, var(--bg-main)); }
+.call-banner.in-call  { background: color-mix(in srgb, var(--primary) 12%, var(--bg-main)); }
+
+.call-banner-info {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.call-banner-info span:last-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.call-banner-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--primary-light);
+}
+.call-banner-dot.blink  { background: var(--primary-light); animation: blink 1.2s ease-in-out infinite; }
+.call-banner-dot.pulse  { background: var(--success); animation: pulse 1s ease-in-out infinite; }
+.call-banner-dot.active { background: var(--success); box-shadow: 0 0 6px var(--success); }
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.7); opacity: 0.5; }
+}
+
+/* ─── Boutons de bandeau ─────────────────────────────────────────────────── */
+
+.call-actions-sm {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-hangup-sm,
+.btn-accept-sm,
+.btn-reject-sm {
+  border: none;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 14px 36px;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  gap: 5px;
+  font-size: 0.78rem;
   font-weight: 600;
-  cursor: pointer;
   transition: opacity 0.15s, transform 0.1s;
-  letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 
-button:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
-button:active:not(:disabled) { transform: translateY(0); }
-button:disabled { opacity: 0.3; cursor: not-allowed; }
-
-.btn-call {
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 4px 20px color-mix(in srgb, var(--primary) 45%, transparent);
-}
-.btn-hangup {
+.btn-hangup-sm {
   background: var(--accent-pink);
   color: #fff;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-pink) 40%, transparent);
+  padding: 6px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent-pink) 40%, transparent);
 }
-.btn-accept {
+
+.btn-accept-sm {
   background: var(--success);
   color: #0F0A1F;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--success) 40%, transparent);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--success) 40%, transparent);
 }
-.btn-reject {
+
+.btn-reject-sm {
   background: var(--accent-pink);
   color: #fff;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-pink) 40%, transparent);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent-pink) 40%, transparent);
 }
 
-/* ─── Contrôles d'appel ──────────────────────────────────────────────────── */
+.btn-hangup-sm:hover:not(:disabled),
+.btn-accept-sm:hover:not(:disabled),
+.btn-reject-sm:hover:not(:disabled) { opacity: 0.85; transform: scale(1.05); }
+.btn-hangup-sm:active:not(:disabled),
+.btn-accept-sm:active:not(:disabled),
+.btn-reject-sm:active:not(:disabled) { transform: scale(0.96); }
 
-.call-controls {
+/* ─── Zone de chat ───────────────────────────────────────────────────────── */
+
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  user-select: text;
 }
 
-.call-status,
-.call-incoming {
+.chat-area::-webkit-scrollbar { width: 4px; }
+.chat-area::-webkit-scrollbar-track { background: transparent; }
+.chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.chat-empty {
   text-align: center;
-  width: 100%;
-}
-
-.status-text {
-  margin-bottom: 20px;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  opacity: 0.4;
+  font-size: 0.82rem;
+  margin: auto;
 }
 
-.call-actions {
+/* ─── Bulles ─────────────────────────────────────────────────────────────── */
+
+.bubble {
   display: flex;
-  justify-content: center;
-  gap: 16px;
+  flex-direction: column;
+  max-width: 78%;
+  gap: 3px;
 }
 
-/* ─── Barre de raccourci en appel ────────────────────────────────────────── */
+.bubble-me {
+  align-self: flex-end;
+  align-items: flex-end;
+}
 
-.call-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: var(--bg-card);
+.bubble-peer {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.bubble-text {
+  padding: 8px 13px;
+  border-radius: 16px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  word-break: break-word;
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+.bubble-me .bubble-text {
+  background: var(--primary);
+  color: #fff;
+  border-bottom-right-radius: 5px;
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+.bubble-peer .bubble-text {
+  background: var(--bg-bubble-peer);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 5px;
+}
+
+.bubble-time {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  opacity: 0.55;
+  padding: 0 3px;
+}
+
+/* ─── Saisie de message ──────────────────────────────────────────────────── */
+
+.chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 14px;
   border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--bg-card) 40%, var(--bg-main));
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-main);
+  font-size: 0.88rem;
+  font-family: inherit;
+  padding: 9px 16px;
+  outline: none;
+  transition: border-color 0.15s;
+  user-select: text;
+  min-width: 0;
+}
+
+.chat-input:focus {
+  border-color: var(--primary-light);
+}
+
+.chat-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.45;
+}
+
+.btn-send {
+  flex-shrink: 0;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--primary) 45%, transparent);
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-send:hover:not(:disabled) { opacity: 0.85; transform: scale(1.06); }
+.btn-send:active:not(:disabled) { transform: scale(0.95); }
+.btn-send:disabled { opacity: 0.25; cursor: not-allowed; }
+
+/* ─── Bouton logout ──────────────────────────────────────────────────────── */
+
+.btn-logout {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+.btn-logout:hover { opacity: 1; }
 
 /* ─── Écran de connexion ─────────────────────────────────────────────────── */
 
@@ -226,13 +417,6 @@ button:disabled { opacity: 0.3; cursor: not-allowed; }
   gap: 16px;
   padding: 32px;
   text-align: center;
-}
-
-.setup-logo {
-  width: 80px;
-  height: 80px;
-  border-radius: 18px;
-  margin-bottom: 4px;
 }
 
 .setup h1 {
@@ -251,28 +435,15 @@ button:disabled { opacity: 0.3; cursor: not-allowed; }
 .btn-kinde {
   background: var(--primary);
   color: #fff;
-  padding: 14px 40px;
+  padding: 13px 40px;
   border-radius: 8px;
   border: none;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 20px color-mix(in srgb, var(--primary) 45%, transparent);
-  transition: opacity 0.15s;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.02em;
 }
-.btn-kinde:hover:not(:disabled) { opacity: 0.85; }
+.btn-kinde:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
 .btn-kinde:disabled { opacity: 0.4; cursor: not-allowed; }
-
-/* ─── Bouton logout ──────────────────────────────────────────────────────── */
-
-.btn-logout {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: 6px;
-  cursor: pointer;
-  opacity: 0.45;
-  transition: opacity 0.15s;
-  border-radius: 6px;
-}
-.btn-logout:hover { opacity: 1; }

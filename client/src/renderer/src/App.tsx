@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, KeyboardEvent } from 'react'
 
-// ─── Icons ───────────────────────────────────────────────────────────────────
+// ─── Icons ────────────────────────────────────────────────────────────────────
 
 const AppLogo = ({ size = 28 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 1024 1024" style={{ borderRadius: size * 0.25, flexShrink: 0 }}>
@@ -11,21 +11,21 @@ const AppLogo = ({ size = 28 }: { size?: number }) => (
 )
 
 const VideoIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="7" width="14" height="10" rx="2"/>
     <polygon points="16 9 22 5 22 19 16 15"/>
   </svg>
 )
 
 const HangupIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.9 8.81"/>
     <line x1="23" y1="1" x2="1" y2="23"/>
   </svg>
 )
 
 const AcceptIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
   </svg>
 )
@@ -45,13 +45,31 @@ const LogoutIcon = () => (
   </svg>
 )
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+const SendIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="22" y1="2" x2="11" y2="13"/>
+    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+  </svg>
+)
+
+// ─── Types & helpers ──────────────────────────────────────────────────────────
+
+interface ChatMessage {
+  id: string
+  from: 'me' | 'peer'
+  text: string
+  timestamp: number
+}
 
 type CallState = 'idle' | 'calling' | 'incoming' | 'in-call'
 
 function generateRoomId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(8))
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+function formatTime(ts: number): string {
+  return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
 // ─── Écran de connexion ───────────────────────────────────────────────────────
@@ -77,6 +95,13 @@ export default function App() {
   const [peerName, setPeerName] = useState('')
   const [callState, setCallState] = useState<CallState>('idle')
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [inputText, setInputText] = useState('')
+  const chatEndRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = (instant?: boolean) => {
+    chatEndRef.current?.scrollIntoView({ behavior: instant ? 'instant' : 'smooth' })
+  }
 
   useEffect(() => {
     window.api.auth.getStatus().then(setAuthStatus)
@@ -96,11 +121,30 @@ export default function App() {
     })
     window.api.onCallRejected(() => { setCallState('idle'); setCurrentRoomId(null) })
     window.api.onCallHangup(() => { setCallState('idle'); setCurrentRoomId(null) })
+    window.api.onMessage((msg) => {
+      setMessages((prev) => [...prev, msg])
+    })
   }, [])
+
+  // Charger l'historique dès que l'auth est confirmée
+  useEffect(() => {
+    if (authStatus?.isAuthenticated) {
+      window.api.getMessages().then((msgs) => {
+        setMessages(msgs)
+        setTimeout(() => scrollToBottom(true), 50)
+      })
+    }
+  }, [authStatus?.isAuthenticated])
+
+  // Scroll vers le bas à chaque nouveau message
+  useEffect(() => {
+    if (messages.length > 0) scrollToBottom()
+  }, [messages.length])
 
   if (authStatus === null) return <Setup loading={true} />
   if (!authStatus.isAuthenticated) return <Setup loading={false} />
 
+  // ── Actions ──
   const startCall = () => {
     const roomId = generateRoomId()
     setCurrentRoomId(roomId)
@@ -117,69 +161,129 @@ export default function App() {
   const rejectCall = () => { window.api.reject(); setCallState('idle'); setCurrentRoomId(null) }
   const hangup    = () => { window.api.hangup(); setCallState('idle'); setCurrentRoomId(null) }
 
+  const sendMessage = () => {
+    const text = inputText.trim()
+    if (!text) return
+    setInputText('')
+    window.api.sendMessage(text)
+  }
+
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) sendMessage()
+  }
+
   return (
     <div className="app">
-      {callState !== 'in-call' && (
-        <>
-          <header className="app-header">
-            <div className="app-header-brand">
-              <AppLogo size={28} />
-              <h1>VideoCall</h1>
-            </div>
-            <button className="btn-logout" onClick={() => window.api.auth.logout()} title="Déconnexion">
-              <LogoutIcon />
-            </button>
-          </header>
 
-          <main className="app-main">
-            <div className="contact-card">
-              <div className="avatar">
-                {peerName ? peerName[0].toUpperCase() : <UserIcon />}
-              </div>
-              <div className="contact-info">
-                <span className="contact-name">{peerName || '—'}</span>
-                <span className={`status ${peerOnline ? 'online' : 'offline'}`}>
-                  <span className="status-dot" />
-                  {peerOnline ? 'En ligne' : 'Hors ligne'}
-                </span>
-              </div>
-            </div>
+      {/* ── Header ── */}
+      <header className="app-header">
+        <div className="app-header-brand">
+          <AppLogo size={28} />
+          <h1>VideoCall</h1>
+        </div>
+        <button className="btn-logout" onClick={() => window.api.auth.logout()} title="Déconnexion">
+          <LogoutIcon />
+        </button>
+      </header>
 
-            <div className="call-controls">
-              {callState === 'idle' && (
-                <button className="btn-call" onClick={startCall} disabled={!peerOnline}>
-                  <VideoIcon /> Appeler
-                </button>
-              )}
-              {callState === 'calling' && (
-                <div className="call-status">
-                  <p className="status-text">Appel en cours…</p>
-                  <button className="btn-hangup" onClick={hangup}>
-                    <HangupIcon /> Raccrocher
-                  </button>
-                </div>
-              )}
-              {callState === 'incoming' && (
-                <div className="call-incoming">
-                  <p className="status-text">Appel de <strong>{peerName}</strong></p>
-                  <div className="call-actions">
-                    <button className="btn-accept" onClick={acceptCall}><AcceptIcon /> Décrocher</button>
-                    <button className="btn-reject" onClick={rejectCall}><HangupIcon /> Refuser</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </main>
-        </>
+      {/* ── Contact (idle uniquement) ── */}
+      {callState === 'idle' && (
+        <div className="contact-card">
+          <div className="avatar">
+            {peerName ? peerName[0].toUpperCase() : <UserIcon />}
+          </div>
+          <div className="contact-info">
+            <span className="contact-name">{peerName || '—'}</span>
+            <span className={`status ${peerOnline ? 'online' : 'offline'}`}>
+              <span className="status-dot" />
+              {peerOnline ? 'En ligne' : 'Hors ligne'}
+            </span>
+          </div>
+          <button
+            className="btn-call-icon"
+            onClick={startCall}
+            disabled={!peerOnline}
+            title={peerOnline ? 'Appeler' : 'Hors ligne'}
+          >
+            <VideoIcon />
+          </button>
+        </div>
       )}
 
-      {callState === 'in-call' && (
-        <div className="call-bar">
-          <button className="btn-hangup" onClick={hangup}>
+      {/* ── Bandeau appel en cours ── */}
+      {callState === 'calling' && (
+        <div className="call-banner calling">
+          <div className="call-banner-info">
+            <span className="call-banner-dot blink" />
+            <span>Appel en cours…</span>
+          </div>
+          <button className="btn-hangup-sm" onClick={hangup}>
             <HangupIcon /> Raccrocher
           </button>
         </div>
       )}
+
+      {/* ── Bandeau appel entrant ── */}
+      {callState === 'incoming' && (
+        <div className="call-banner incoming">
+          <div className="call-banner-info">
+            <span className="call-banner-dot pulse" />
+            <span>Appel de <strong>{peerName}</strong></span>
+          </div>
+          <div className="call-actions-sm">
+            <button className="btn-accept-sm" onClick={acceptCall} title="Décrocher">
+              <AcceptIcon />
+            </button>
+            <button className="btn-reject-sm" onClick={rejectCall} title="Refuser">
+              <HangupIcon />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bandeau en appel ── */}
+      {callState === 'in-call' && (
+        <div className="call-banner in-call">
+          <div className="call-banner-info">
+            <span className="call-banner-dot active" />
+            <span>En appel avec <strong>{peerName}</strong></span>
+          </div>
+          <button className="btn-hangup-sm" onClick={hangup}>
+            <HangupIcon /> Raccrocher
+          </button>
+        </div>
+      )}
+
+      {/* ── Zone de messages ── */}
+      <div className="chat-area">
+        {messages.length === 0 && (
+          <p className="chat-empty">Aucun message pour l'instant</p>
+        )}
+        {messages.map((msg) => (
+          <div key={msg.id} className={`bubble ${msg.from === 'me' ? 'bubble-me' : 'bubble-peer'}`}>
+            <span className="bubble-text">{msg.text}</span>
+            <span className="bubble-time">{formatTime(msg.timestamp)}</span>
+          </div>
+        ))}
+        <div ref={chatEndRef} />
+      </div>
+
+      {/* ── Saisie message ── */}
+      <div className="chat-input-row">
+        <input
+          className="chat-input"
+          type="text"
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder="Message…"
+          maxLength={2000}
+        />
+        <button className="btn-send" onClick={sendMessage} disabled={!inputText.trim()} title="Envoyer">
+          <SendIcon />
+        </button>
+      </div>
+
     </div>
   )
 }

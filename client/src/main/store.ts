@@ -2,6 +2,38 @@ import { app } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 
+// ─── Messages ─────────────────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  id: string
+  from: 'me' | 'peer'
+  text: string
+  timestamp: number
+}
+
+const MAX_MESSAGES = 500
+
+function messagesPath(): string {
+  return join(app.getPath('userData'), 'messages.json')
+}
+
+export function getMessages(): ChatMessage[] {
+  try {
+    const path = messagesPath()
+    if (!existsSync(path)) return []
+    return JSON.parse(readFileSync(path, 'utf-8')) as ChatMessage[]
+  } catch { return [] }
+}
+
+export function addMessage(msg: ChatMessage): void {
+  const msgs = getMessages()
+  msgs.push(msg)
+  if (msgs.length > MAX_MESSAGES) msgs.splice(0, msgs.length - MAX_MESSAGES)
+  writeFileSync(messagesPath(), JSON.stringify(msgs), 'utf-8')
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
 export interface AuthState {
   accessToken: string
   idToken: string

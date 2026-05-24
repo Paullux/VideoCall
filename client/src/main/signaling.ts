@@ -1,6 +1,8 @@
 import WebSocket from 'ws'
 import { ipcMain, Notification, BrowserWindow } from 'electron'
 import { ClientMessage, ServerMessage } from '../shared/types'
+import { addMessage, getMessages, ChatMessage } from './store'
+import { randomBytes } from 'crypto'
 
 interface SignalingConfig {
   url: string
@@ -47,9 +49,7 @@ export function createSignalingClient(
       let msg: ServerMessage
       try {
         msg = JSON.parse(data.toString()) as ServerMessage
-      } catch {
-        return
-      }
+      } catch { return }
 
       switch (msg.type) {
         case 'peer_online':
@@ -80,6 +80,23 @@ export function createSignalingClient(
           send('call_hangup')
           callbacks.onCallEnded()
           break
+        case 'message_received': {
+          const chatMsg: ChatMessage = {
+            id: randomBytes(8).toString('hex'),
+            from: 'peer',
+            text: msg.text,
+            timestamp: msg.timestamp,
+          }
+          addMessage(chatMsg)
+          send('new-message', chatMsg)
+          if (Notification.isSupported() && !mainWindow.isFocused()) {
+            new Notification({
+              title: msg.fromName,
+              body: msg.text,
+            }).show()
+          }
+          break
+        }
       }
     })
 
@@ -89,9 +106,11 @@ export function createSignalingClient(
     })
 
     ws.on('error', () => {
-      // close event follows — reconnect handled there
+      // close event follows
     })
   }
+
+  // ─── IPC ──────────────────────────────────────────────────────────────────
 
   ipcMain.on('call', (_, roomId: string) => {
     ws?.send(JSON.stringify({ type: 'call', roomId } satisfies ClientMessage))
@@ -107,6 +126,19 @@ export function createSignalingClient(
     ws?.send(JSON.stringify({ type: 'hangup' } satisfies ClientMessage))
     callbacks.onCallEnded()
   })
+  ipcMain.on('send-message', (_, text: string) => {
+    const timestamp = Date.now()
+    const chatMsg: ChatMessage = {
+      id: randomBytes(8).toString('hex'),
+      from: 'me',
+      text,
+      timestamp,
+    }
+    addMessage(chatMsg)
+    send('new-message', chatMsg)
+    ws?.send(JSON.stringify({ type: 'message', text, timestamp } satisfies ClientMessage))
+  })
+  ipcMain.handle('get-messages', () => getMessages())
 
   connect()
 
