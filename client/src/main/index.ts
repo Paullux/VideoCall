@@ -178,6 +178,7 @@ function createWindow(): BrowserWindow {
       sandbox: false,
     },
     title: 'VideoCall',
+    icon: join(__dirname, '../../icon.png'),
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {

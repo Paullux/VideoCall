@@ -32,10 +32,17 @@
     "appId": "com.paulwoisard.videocall",
     "productName": "VideoCall",
     "copyright": "Copyright © 2026 Paul WOISARD",
+    "icon": "icon.png",
     "asar": true,
     "files": ["out/**/*"],
+    "extraResources": [{ "from": "icon.png", "to": "icon.png" }],
     "win": {
       "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "nsis": {
+      "installerIcon": "icon.png",
+      "uninstallerIcon": "icon.png",
+      "installerHeaderIcon": "icon.png"
     },
     "linux": {
       "target": [{ "target": "AppImage", "arch": ["x64"] }]
