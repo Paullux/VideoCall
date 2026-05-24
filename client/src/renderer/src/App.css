@@ -1,0 +1,236 @@
+:root {
+  --bg-main: #0F0A1F;
+  --bg-card: #1A1233;
+
+  --primary: #7C3AED;
+  --primary-light: #A78BFA;
+  --accent-pink: #EC4899;
+  --accent-cyan: #22D3EE;
+
+  --text-main: #F8FAFC;
+  --text-muted: #CBD5E1;
+
+  --border: #312E81;
+  --success: #34D399;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-main);
+  color: var(--text-main);
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 24px;
+}
+
+.app-header h1 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-light);
+  margin-bottom: 32px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.contact-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-main);
+  flex-shrink: 0;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contact-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.status {
+  font-size: 0.82rem;
+}
+.status.online  { color: var(--success); }
+.status.offline { color: var(--text-muted); opacity: 0.5; }
+
+.call-controls {
+  display: flex;
+  justify-content: center;
+}
+
+button {
+  padding: 14px 36px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.02em;
+}
+
+button:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-call {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--primary) 45%, transparent);
+}
+.btn-hangup {
+  background: var(--accent-pink);
+  color: #fff;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-pink) 40%, transparent);
+}
+.btn-accept {
+  background: var(--success);
+  color: #0F0A1F;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--success) 40%, transparent);
+}
+.btn-reject {
+  background: var(--accent-pink);
+  color: #fff;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent-pink) 40%, transparent);
+}
+
+.call-status,
+.call-incoming {
+  text-align: center;
+  width: 100%;
+}
+
+.status-text {
+  margin-bottom: 20px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.call-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* Écran de connexion */
+.setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+  padding: 32px;
+  text-align: center;
+}
+
+.setup h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--primary-light);
+  letter-spacing: 0.08em;
+}
+
+.setup-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.btn-kinde {
+  background: var(--primary);
+  color: #fff;
+  padding: 14px 40px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--primary) 45%, transparent);
+  transition: opacity 0.15s;
+}
+.btn-kinde:hover:not(:disabled) { opacity: 0.85; }
+.btn-kinde:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Bouton logout dans le header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.btn-logout {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.btn-logout:hover { opacity: 1; }
+
+/* Barre de contrôle visible sous la WebContentsView Jitsi */
+.call-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
