@@ -40,9 +40,8 @@
       "target": [{ "target": "nsis", "arch": ["x64"] }]
     },
     "nsis": {
-      "installerIcon": "icon.png",
-      "uninstallerIcon": "icon.png",
-      "installerHeaderIcon": "icon.png"
+      "oneClick": true,
+      "perMachine": false
     },
     "linux": {
       "target": [{ "target": "AppImage", "arch": ["x64"] }]
