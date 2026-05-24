@@ -34,17 +34,38 @@
     "copyright": "Copyright © 2026 Paul WOISARD",
     "icon": "icon.png",
     "asar": true,
-    "files": ["out/**/*"],
-    "extraResources": [{ "from": "icon.png", "to": "icon.png" }],
+    "files": [
+      "out/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "icon.png",
+        "to": "icon.png"
+      }
+    ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }]
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
     "nsis": {
       "oneClick": true,
       "perMachine": false
     },
     "linux": {
-      "target": [{ "target": "AppImage", "arch": ["x64"] }]
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     }
   }
 }
