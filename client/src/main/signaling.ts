@@ -21,6 +21,10 @@ export function createSignalingClient(
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
   let destroyed = false
 
+  function send(channel: string, ...args: unknown[]): void {
+    if (!mainWindow.isDestroyed()) mainWindow.webContents.send(channel, ...args)
+  }
+
   async function connect(): Promise<void> {
     if (destroyed) return
 
@@ -49,13 +53,13 @@ export function createSignalingClient(
 
       switch (msg.type) {
         case 'peer_online':
-          mainWindow.webContents.send('peer_status', true, msg.peerName)
+          send('peer_status', true, msg.peerName)
           break
         case 'peer_offline':
-          mainWindow.webContents.send('peer_status', false, '')
+          send('peer_status', false, '')
           break
         case 'incoming_call':
-          mainWindow.webContents.send('incoming_call', msg.roomId)
+          send('incoming_call', msg.roomId)
           if (Notification.isSupported()) {
             new Notification({
               title: 'Appel entrant',
@@ -66,21 +70,21 @@ export function createSignalingClient(
           mainWindow.focus()
           break
         case 'call_accepted':
-          mainWindow.webContents.send('call_accepted', msg.roomId)
+          send('call_accepted', msg.roomId)
           callbacks.onCallReady(msg.roomId)
           break
         case 'call_rejected':
-          mainWindow.webContents.send('call_rejected')
+          send('call_rejected')
           break
         case 'call_hangup':
-          mainWindow.webContents.send('call_hangup')
+          send('call_hangup')
           callbacks.onCallEnded()
           break
       }
     })
 
     ws.on('close', () => {
-      mainWindow.webContents.send('peer_status', false, '')
+      send('peer_status', false, '')
       if (!destroyed) reconnectTimer = setTimeout(connect, 5_000)
     })
 
