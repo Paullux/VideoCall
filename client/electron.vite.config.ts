@@ -1,6 +1,7 @@
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import { loadEnv } from 'vite'
+import { resolve } from 'path'
 
 export default defineConfig(({ mode }) => {
   // Charge TOUTES les vars du .env (préfixe vide = pas de filtre)
@@ -20,6 +21,9 @@ export default defineConfig(({ mode }) => {
     },
     renderer: {
       plugins: [react()],
+      server: {
+        fs: { allow: [resolve(__dirname)] },
+      },
     },
   }
 })
